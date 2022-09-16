@@ -31,6 +31,7 @@
 extern crate core;
 
 use clap::*;
+use std::path::PathBuf;
 use syslog::*;
 
 const EXIT_OKAY: i32 = 0;
@@ -39,8 +40,49 @@ const EXIT_OKAY: i32 = 0;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
 struct Cli {
+    /// Sets a custom config file
+    #[clap(short, long, value_parser, value_name = "FILE")]
+    config: Option<PathBuf>,
+
+    /// Turn on verbose output
     #[clap(short, long)]
     verbose: bool,
+
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    /// All things related PKI (certificates, ssh keys, ...)
+    Pki(Pki),
+}
+
+#[derive(Debug, Args)]
+#[clap(args_conflicts_with_subcommands = true)]
+struct Pki {
+    #[clap(subcommand)]
+    command: PkiCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum PkiCommands {
+    /// All things SSH (key generation, fingerprinting, ...)
+    Ssh(Ssh),
+}
+
+#[derive(Debug, Args)]
+struct Ssh {
+    #[clap(subcommand)]
+    command: SshCommands,
+}
+
+#[derive(Debug, Subcommand)]
+enum SshCommands {
+    /// Generate a new ED25559 SSH keypair
+    Generate {},
+    /// Print the fingerprint of a given SSH key
+    Print {},
 }
 
 fn run() -> i32 {
