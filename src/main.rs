@@ -28,14 +28,17 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod pki;
+
 extern crate core;
 
+use crate::pki::generate_keypair;
 use clap::*;
 use std::path::PathBuf;
 use syslog::*;
 
 const EXIT_OKAY: i32 = 0;
-//const EXIT_ERROR: i32 = 1;
+const EXIT_ERROR: i32 = 1;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about=None)]
@@ -86,7 +89,7 @@ enum SshCommands {
 }
 
 fn run() -> i32 {
-    let args = Cli::parse();
+    let args: Cli = Cli::parse();
     let name = "auraectl";
 
     // The logger will log to stdout and the syslog by default.
@@ -121,7 +124,22 @@ fn run() -> i32 {
         Err(e) => panic!("unable to connect to syslog: {:?}", e),
     };
 
-    EXIT_OKAY
+    let res = match args.command {
+        Commands::Pki(pki) => match pki.command {
+            PkiCommands::Ssh(ssh) => match ssh.command {
+                SshCommands::Generate {} => generate_keypair(),
+                SshCommands::Print {} => Ok(()),
+            },
+        },
+    };
+
+    match res {
+        Err(e) => {
+            println!("error: {}", e);
+            EXIT_ERROR
+        }
+        Ok(()) => EXIT_OKAY,
+    }
 }
 
 fn main() {
