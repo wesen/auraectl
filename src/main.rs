@@ -28,10 +28,12 @@
  *                                                                            *
 \* -------------------------------------------------------------------------- */
 
+mod config;
 mod pki;
 
 extern crate core;
 
+use crate::config::Settings;
 use crate::pki::generate_keypair;
 use clap::*;
 use std::path::PathBuf;
@@ -89,6 +91,9 @@ enum SshCommands {
 }
 
 fn run() -> i32 {
+    let settings = Settings::new().unwrap();
+    println!("settings: {:?}", settings);
+
     let args: Cli = Cli::parse();
     let name = "auraectl";
 
@@ -127,7 +132,7 @@ fn run() -> i32 {
     let res = match args.command {
         Commands::Pki(pki) => match pki.command {
             PkiCommands::Ssh(ssh) => match ssh.command {
-                SshCommands::Generate {} => generate_keypair(),
+                SshCommands::Generate {} => generate_keypair(&settings),
                 SshCommands::Print {} => Ok(()),
             },
         },
